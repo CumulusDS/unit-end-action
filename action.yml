@@ -33,7 +33,13 @@ inputs:
     description: "github.event_name"
     required: false
     default: "${{ github.event_name }}"
-outputs: {}
+outputs:
+  matrix:
+    description: "Deployment matrix"
+    value: "${{ steps.set-matrix.outputs.matrix }}"
+  stage:
+    description: "Feature stage"
+    value: "${{ steps.set-feature-stage.outputs.stage }}"
 runs:
   using: "composite"
   steps:
@@ -51,12 +57,13 @@ runs:
       id: upload-artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ inputs.asdf }}
-        path: ${{ inputs.asdf }}
+        name: ${{ inputs.uploadArtifactName }}
+        path: ${{ inputs.artifactPath }}
     - name: Determine trigger
       id: trigger
       run: |
         echo "::group::Determining action trigger"
+        echo "${{ inputs.githubEventAction }}"
         if [ "${{ inputs.githubEventAction }}" == "released" ]; then
           echo "TRIGGER=release" >> $GITHUB_ENV
         else
@@ -66,17 +73,28 @@ runs:
       shell: bash
     - name: Set feature stage
       id: set-feature-stage
-      uses: CumulusDS/feature-stage-action@master
+      uses: CumulusDS/feature-stage-action@initial-setup
       with:
         githubEventName: ${{ inputs.githubEventName }}
     - name: Matrix Outputs
       id: set-matrix
       run: |
+        echo "::group::Set Matrix"
         if [[ "${{ env.TRIGGER }}" == "branch" ]]; then
           echo "::set-output name=matrix::{\"include\":[{\"region\":\"us-east-1\",\"stage\":\"${{ env.FEATURE_STAGE }}\"},{\"region\":\"us-east-2\",\"stage\":\"${{ env.FEATURE_STAGE }}\"}]}"
         elif [[ "${{ env.TRIGGER }}" == "release" ]]; then
           echo "::set-output name=matrix::{\"include\":[{\"region\":\"us-east-1\",\"stage\":\"dev\"},{\"region\":\"us-east-2\",\"stage\":\"dev\"},{\"region\":\"us-east-1\",\"stage\":\"prod\"},{\"region\":\"us-east-2\",\"stage\":\"prod\"},{\"region\":\"ap-southeast-1\",\"stage\":\"prod\"},{\"region\":\"eu-west-1\",\"stage\":\"prod\"}]}"
         else
-          echo "no match for event trigger"
+          echo "No match for event trigger"
         fi
+        echo "::endgroup::"
+      shell: bash
+    - name: Echo Matrix
+      id: echo-matrix
+      env:
+        MATRIX: ${{ toJson(steps.set-matrix.outputs.matrix) }}
+      run: |
+        echo "::group::Echo Matrix"
+        echo ${MATRIX} | sed 's/\\"/"/g' | sed 's/^.\(.*\).$/\1/' | jq '.'
+        echo "::endgroup::"
       shell: bash
