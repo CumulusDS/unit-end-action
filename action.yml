@@ -1,26 +1,82 @@
 name: 'action-template'
 description: 'description'
 inputs:
-  input:
-    description: 'description'
+#  text:
+#    description: "text for slack message"
+#    required: false
+#    default: "${{ github.repository }} unit test"
+#  status:
+#    description: "Job Status"
+#    required: false
+#    default: "${{ job.status }}"
+#  author_name:
+#    description: "Message author name for slack message"
+#    required: false
+#    default: "${{ github.repository }} ${{ github.workflow }}"
+#  slack_webhook_url:
+#    description: ""
+#    required: true
+#    default: "" # remove this when we can make notify a part of this step
+  uploadArtifactName:
+    description: "Name of uploaded artifact"
     required: false
-    default: ''
-outputs:
-  result:
-    description: "results"
-    value: "${{ steps.action.outputs.result }}"
+    default: upload-artifacts
+  artifactPath:
+    description: "Path to upload as an artifact"
+    required: false
+    default: "var"
+  githubEventAction:
+    description: "github.event.action"
+    required: false
+    default: "${{ github.event.action }}"
+  githubEventName:
+    description: "github.event_name"
+    required: false
+    default: "${{ github.event_name }}"
+outputs: {}
 runs:
   using: "composite"
   steps:
-    - name: install cfn_nag_scan
-      id: install
+#    - name: Notify Slack
+#      id: notify-slack
+#      uses: 8398a7/action-slack@v3.9.2
+#      # if: always() && github.actor != 'dependabot[bot]' # if conditional not yet supported for composite actions
+#      with:
+#        text: ${{ inputs.asdf }}
+#        status: ${{ inputs.asdf }}
+#        author_name: ${{ inputs.asdf }}
+#      env:
+#        SLACK_WEBHOOK_URL: ${{ inputs.asdf }}
+    - name: Upload artifacts
+      id: upload-artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.asdf }}
+        path: ${{ inputs.asdf }}
+    - name: Determine trigger
+      id: trigger
       run: |
-        echo "::group::Title"
-        echo "some message"
+        echo "::group::Determining action trigger"
+        if [ "${{ inputs.githubEventAction }}" == "released" ]; then
+          echo "TRIGGER=release" >> $GITHUB_ENV
+        else
+          echo "TRIGGER=branch" >> $GITHUB_ENV
+        fi
         echo "::endgroup::"
       shell: bash
-    - name: Print Output
-      id: print
+    - name: Set feature stage
+      id: set-feature-stage
+      uses: CumulusDS/feature-stage-action@master
+      with:
+        githubEventName: ${{ inputs.githubEventName }}
+    - name: Matrix Outputs
+      id: set-matrix
       run: |
-        echo "${{ steps.action.outputs.result }}"
+        if [[ "${{ env.TRIGGER }}" == "branch" ]]; then
+          echo "::set-output name=matrix::{\"include\":[{\"region\":\"us-east-1\",\"stage\":\"${{ env.FEATURE_STAGE }}\"},{\"region\":\"us-east-2\",\"stage\":\"${{ env.FEATURE_STAGE }}\"}]}"
+        elif [[ "${{ env.TRIGGER }}" == "release" ]]; then
+          echo "::set-output name=matrix::{\"include\":[{\"region\":\"us-east-1\",\"stage\":\"dev\"},{\"region\":\"us-east-2\",\"stage\":\"dev\"},{\"region\":\"us-east-1\",\"stage\":\"prod\"},{\"region\":\"us-east-2\",\"stage\":\"prod\"},{\"region\":\"ap-southeast-1\",\"stage\":\"prod\"},{\"region\":\"eu-west-1\",\"stage\":\"prod\"}]}"
+        else
+          echo "no match for event trigger"
+        fi
       shell: bash

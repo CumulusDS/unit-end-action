@@ -33,7 +33,7 @@ labels:
   description: This will not be worked on
   color: ffffff
 repos:
-- name: CumulusDS/action-template
+- name: CumulusDS/unit-end-action
   labels:
   - actions
   - bug
