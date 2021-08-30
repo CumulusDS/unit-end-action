@@ -1,5 +1,5 @@
-name: 'action-template'
-description: 'description'
+name: 'unit-end-action'
+description: 'Composite action for end of unit tests'
 inputs:
 #  text:
 #    description: "text for slack message"
@@ -48,11 +48,11 @@ runs:
 #      uses: 8398a7/action-slack@v3.9.2
 #      # if: always() && github.actor != 'dependabot[bot]' # if conditional not yet supported for composite actions
 #      with:
-#        text: ${{ inputs.asdf }}
-#        status: ${{ inputs.asdf }}
-#        author_name: ${{ inputs.asdf }}
+#        text: ${{ inputs.text }}
+#        status: ${{ inputs.status }}
+#        author_name: ${{ inputs.author_name }}
 #      env:
-#        SLACK_WEBHOOK_URL: ${{ inputs.asdf }}
+#        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
     - name: Upload artifacts
       id: upload-artifacts
       uses: actions/upload-artifact@v2
@@ -73,7 +73,7 @@ runs:
       shell: bash
     - name: Set feature stage
       id: set-feature-stage
-      uses: CumulusDS/feature-stage-action@initial-setup
+      uses: CumulusDS/feature-stage-action@v1
       with:
         githubEventName: ${{ inputs.githubEventName }}
     - name: Matrix Outputs
