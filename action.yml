@@ -43,58 +43,19 @@ outputs:
 runs:
   using: "composite"
   steps:
-#    - name: Notify Slack
-#      id: notify-slack
-#      uses: 8398a7/action-slack@v3.9.2
-#      # if: always() && github.actor != 'dependabot[bot]' # if conditional not yet supported for composite actions
-#      with:
-#        text: ${{ inputs.text }}
-#        status: ${{ inputs.status }}
-#        author_name: ${{ inputs.author_name }}
-#      env:
-#        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
+    - name: Notify Slack
+      id: notify-slack
+      uses: 8398a7/action-slack@v3.9.2
+      if: always() && github.actor != 'dependabot[bot]'
+      with:
+        text: ${{ inputs.text }}
+        status: ${{ inputs.status }}
+        author_name: ${{ inputs.author_name }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
     - name: Upload artifacts
       id: upload-artifacts
       uses: actions/upload-artifact@v2
       with:
         name: ${{ inputs.uploadArtifactName }}
         path: ${{ inputs.artifactPath }}
-    - name: Determine trigger
-      id: trigger
-      run: |
-        echo "::group::Determining action trigger"
-        echo "${{ inputs.githubEventAction }}"
-        if [ "${{ inputs.githubEventAction }}" == "released" ]; then
-          echo "TRIGGER=release" >> $GITHUB_ENV
-        else
-          echo "TRIGGER=branch" >> $GITHUB_ENV
-        fi
-        echo "::endgroup::"
-      shell: bash
-    - name: Set feature stage
-      id: set-feature-stage
-      uses: CumulusDS/feature-stage-action@v1
-      with:
-        githubEventName: ${{ inputs.githubEventName }}
-    - name: Matrix Outputs
-      id: set-matrix
-      run: |
-        echo "::group::Set Matrix"
-        if [[ "${{ env.TRIGGER }}" == "branch" ]]; then
-          echo "::set-output name=matrix::{\"include\":[{\"region\":\"us-east-1\",\"stage\":\"${{ env.FEATURE_STAGE }}\"},{\"region\":\"us-east-2\",\"stage\":\"${{ env.FEATURE_STAGE }}\"}]}"
-        elif [[ "${{ env.TRIGGER }}" == "release" ]]; then
-          echo "::set-output name=matrix::{\"include\":[{\"region\":\"us-east-1\",\"stage\":\"dev\"},{\"region\":\"us-east-2\",\"stage\":\"dev\"},{\"region\":\"us-east-1\",\"stage\":\"prod\"},{\"region\":\"us-east-2\",\"stage\":\"prod\"},{\"region\":\"ap-southeast-1\",\"stage\":\"prod\"},{\"region\":\"eu-west-1\",\"stage\":\"prod\"}]}"
-        else
-          echo "No match for event trigger"
-        fi
-        echo "::endgroup::"
-      shell: bash
-    - name: Echo Matrix
-      id: echo-matrix
-      env:
-        MATRIX: ${{ toJson(steps.set-matrix.outputs.matrix) }}
-      run: |
-        echo "::group::Echo Matrix"
-        echo ${MATRIX} | sed 's/\\"/"/g' | sed 's/^.\(.*\).$/\1/' | jq '.'
-        echo "::endgroup::"
-      shell: bash
