@@ -47,24 +47,8 @@ default: "${{ github.event_name }}"
         id: end
         uses: Cumulusds/unit-end-action@v1
         if: always()
-```
-
-The results can be later referenced again for use in a separate step if desired using the `results` output from the step.
-In order to reference the `result` output, you must assign and `id` to the step for future referencing.
-
-```yaml
-      - name: reprint results
-        run: |
-          echo "${{ steps.action.end.stage }}"
-          echo "${{ steps.action.end.matrix }}"
-```
-Or as outputs from a job:
-```yaml
-jobs:
-  unit:
-    outputs:
-      matrix: ${{ steps.end.outputs.matrix }}
-      stage: ${{ steps.end.outputs.stage }}
+        with:
+          slack_webhook_url: ${{ secrets.YOUR_SECRET_HERE }}
 ```
 
 

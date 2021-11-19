@@ -4,7 +4,7 @@ inputs:
   text:
     description: "Text for slack message"
     required: false
-    default: "${{ github.repository }} Unit Test"
+    default: "${{ github.repository }} ${{ github.workflow }} Unit Test"
   status:
     description: "Job Status"
     required: false
@@ -12,7 +12,7 @@ inputs:
   author_name:
     description: "Message author name for slack message"
     required: false
-    default: "${{ github.repository }} ${{ github.workflow }}"
+    default: "${{ github.actor }}"
   slack_webhook_url:
     description: "slack webhook url"
     required: false
