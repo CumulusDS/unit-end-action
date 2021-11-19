@@ -7,6 +7,24 @@
 Description
 
 ### Inputs
+#### `text`
+Text for slack message
+required: false
+default: "${{ github.repository }} Unit Test"
+
+#### `status`
+Job Status
+required: false
+default: "${{ job.status }}"
+
+#### `author_name`
+Message author name for slack message
+required: false
+default: "${{ github.repository }} ${{ github.workflow }}"
+
+#### `slack_webhook_url`
+Slack webhook url
+
 #### `uploadArtifactName`
 Name of output artifact
 default: upload-artifacts
@@ -22,13 +40,6 @@ default: "${{ github.event.action }}"
 #### `githubEventName`
 GitHub event name context
 default: "${{ github.event_name }}"
-
-### Outputs
-#### `matrix`
-Built matrix of deployment
-
-#### `stage`
-Stage the action is running for
 
 ### Example usage
 ```yaml

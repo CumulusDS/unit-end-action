@@ -1,22 +1,21 @@
 name: 'unit-end-action'
 description: 'Composite action for end of unit tests'
 inputs:
-#  text:
-#    description: "text for slack message"
-#    required: false
-#    default: "${{ github.repository }} unit test"
-#  status:
-#    description: "Job Status"
-#    required: false
-#    default: "${{ job.status }}"
-#  author_name:
-#    description: "Message author name for slack message"
-#    required: false
-#    default: "${{ github.repository }} ${{ github.workflow }}"
-#  slack_webhook_url:
-#    description: ""
-#    required: true
-#    default: "" # remove this when we can make notify a part of this step
+  text:
+    description: "Text for slack message"
+    required: false
+    default: "${{ github.repository }} Unit Test"
+  status:
+    description: "Job Status"
+    required: false
+    default: "${{ job.status }}"
+  author_name:
+    description: "Message author name for slack message"
+    required: false
+    default: "${{ github.repository }} ${{ github.workflow }}"
+  slack_webhook_url:
+    description: "slack webhook url"
+    required: false
   uploadArtifactName:
     description: "Name of uploaded artifact"
     required: false
@@ -33,13 +32,6 @@ inputs:
     description: "github.event_name"
     required: false
     default: "${{ github.event_name }}"
-outputs:
-  matrix:
-    description: "Deployment matrix"
-    value: "${{ steps.set-matrix.outputs.matrix }}"
-  stage:
-    description: "Feature stage"
-    value: "${{ steps.set-feature-stage.outputs.stage }}"
 runs:
   using: "composite"
   steps:
